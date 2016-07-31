@@ -22,9 +22,15 @@ defmodule Persist.ProducerRegistryTest do
   end
 
   test "removes registration when process dies" do
-    pid = start_mock()
+    pid = spawn_link(fn ->
+      receive do
+        :stop -> :ok
+      end
+    end)
     assert :yes == ProducerRegistry.register_name({__MODULE__, :foo}, pid)
-    stop_mock(pid)
+    ref = Process.monitor(pid)
+    send(pid, :stop)
+    assert_receive {:DOWN, ^ref, _, ^pid, _}
     assert :undefined == ProducerRegistry.whereis_name({__MODULE__, :foo})
   end
 
@@ -43,19 +49,5 @@ defmodule Persist.ProducerRegistryTest do
     assert_receive {:"$gen_cast", {:start_producer, :foo}}
     ProducerRegistry.register_name(name, self())
     assert self() == Task.await(task)
-  end
-
-  defp start_mock do
-    spawn_link(fn ->
-      receive do
-        :stop -> :ok
-      end
-    end)
-  end
-
-  defp stop_mock(pid) do
-    ref = Process.monitor(pid)
-    send(pid, :stop)
-    assert_receive {:DOWN, ^ref, _, ^pid, _}
   end
 end
