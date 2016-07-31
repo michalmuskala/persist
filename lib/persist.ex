@@ -11,10 +11,10 @@ defmodule Persist do
   end
 
   def child_spec(name, opts) do
-    opts = [supervisor_name: Module.concat(name, Supervisor),
-            registry_name:   Module.concat(name, Registry),
-            starter_name:    Module.concat(name, Starter),
-            consumer_name:   Module.concat(name, Consumer)] ++ opts
+    opts = [supervisor: Module.concat(name, Supervisor),
+            registry:   Module.concat(name, Registry),
+            starter:    Module.concat(name, Starter),
+            consumer:   Module.concat(name, Consumer)] ++ opts
 
     supervisor(__MODULE__, [name, opts])
   end
@@ -22,9 +22,8 @@ defmodule Persist do
   def start_link(name, opts) do
     children = [
       worker(Persist.TableOwner, [name, opts]),
-      worker(Persist.ProducerRegistry, [name, opts, name: opts[:registry_name]]),
-      supervisor(Persist.ProducerSupervisor, [name, opts, name: opts[:supervisor_name]]),
-      worker(Persist.ProducerStarter, [name: opts[:starter_name]])
+      worker(Persist.Consumer, [name, opts, name: opts[:consumer]]),
+      supervisor(Persist.ProducerSupervisor, [name, opts])
     ]
 
     Supervisor.start_link(children, strategy: :rest_for_all)

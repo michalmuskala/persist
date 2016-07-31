@@ -1,17 +1,15 @@
 defmodule Persist.ProducerSupervisor do
   import Supervisor.Spec
 
-  def start_link(name, start_args, opts) do
+  def start_link(name, opts, supervisor_opts \\ []) do
     children = [
-      worker(Persist.Producer, start_args)
+      worker(Persist.ProducerRegistry, [name, opts, name: opts[:registry]]),
+      worker(Persist.ProducerStarter, [name, opts, name: opts[:starter]]),
+      supervisor(Persist.ProducerWorkerSupervisor, [name, opts, name: opts[:supervisor]])
     ]
 
-    opts = Keyword.put(opts, :strategy, :simple_one_for_one)
+    supervisor_opts = Keyword.put(supervisor_opts, :strategy, :rest_for_all)
 
-    Supervisor.start_link(children, opts)
-  end
-
-  def start_producer(supervisor, subscription) do
-    Supervisor.start_child(supervisor, [subscription])
+    Supervisor.start_link(children, supervisor_opts)
   end
 end
