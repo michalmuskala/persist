@@ -4,11 +4,11 @@ defmodule Persist.Consumer do
   use GenStage
 
   def start_link(name, persist_opts, opts \\ []) do
-    GenServer.start_link(__MODULE__, {name, persist_opts}, opts)
+    GenStage.start_link(__MODULE__, {name, persist_opts}, opts)
   end
 
   def save_events(consumer, events) do
-    GenServer.cast(consumer, {:save_events, events})
+    GenStage.cast(consumer, {:save_events, events})
   end
 
   def init({name, opts}) do
