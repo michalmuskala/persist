@@ -1,5 +1,3 @@
-alias Experimental.{GenStage}
-
 defmodule Persist.ProducerRegistry do
   use GenServer
 
@@ -8,6 +6,8 @@ defmodule Persist.ProducerRegistry do
   def start_link(name, opts) do
     GenServer.start_link(__MODULE__, {name, opts}, name: name)
   end
+
+  ## required :via interface
 
   def register_name({manager, sub}, pid) do
     GenServer.call(manager, {:register, sub, pid})
@@ -27,6 +27,14 @@ defmodule Persist.ProducerRegistry do
       :undefined           -> exit({:badarg, {name, message}})
     end
   end
+
+  ## Other public functions
+
+  def list(manager) do
+    GenServer.call(manager, :list)
+  end
+
+  ## Implementation
 
   def init({name, opts}) do
     {:ok, %{name: name, subs: %{}, refs: %{}, waiting: %{},
@@ -58,6 +66,10 @@ defmodule Persist.ProducerRegistry do
     end
   end
 
+  def handle_call(:list, _from, state) do
+    {:reply, Map.values(state.subs), state}
+  end
+
   defp register_sub(sub, pid, state) do
     ref     = Process.monitor(pid)
     subs    = Map.put(state.subs, sub, pid)
@@ -76,7 +88,7 @@ defmodule Persist.ProducerRegistry do
   end
 
   def handle_info({:timeout, ref, sub}, %{waiting: waiting} = state) do
-    {requests, waiting} = Map.pop(waiting, sub, [])
+    requests = Map.get(waiting, sub, [])
     requests =
       case List.keytake(requests, ref, 0) do
         {{^ref, from}, rest} ->
