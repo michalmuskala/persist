@@ -10,7 +10,7 @@ defmodule Persist.ProducerStarter do
   end
 
   def handle_cast({:start_producer, sub}, supervisor) do
-    Persist.ProducerSupervisor.start_producer(supervisor, sub)
+    {:ok, _} = Persist.ProducerSupervisor.start_producer(supervisor, sub)
     {:noreply, supervisor}
   end
 end
