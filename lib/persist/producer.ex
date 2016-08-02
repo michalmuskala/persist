@@ -115,4 +115,6 @@ defmodule Persist.Producer do
     do: minimise_temp_acks([ack1..ack2 | rest])
   defp minimise_temp_acks([ack | rest]),
     do: [ack | minimise_temp_acks(rest)]
+  defp minimise_temp_acks([]),
+    do: []
 end

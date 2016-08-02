@@ -3,8 +3,8 @@ defmodule Persist.ProducerRegistry do
 
   alias Persist.ProducerStarter
 
-  def start_link(name, opts) do
-    GenServer.start_link(__MODULE__, {name, opts}, name: name)
+  def start_link(name, persist_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, {name, persist_opts}, opts)
   end
 
   ## required :via interface
